@@ -78,25 +78,9 @@ The command removes all the Kubernetes components associated with the chart and 
 | `sidecar.datasources.label`     | Label that config maps with datasources should have to be added | `false`                               |
 | `smtp.existingSecret`           | The name of an existing secret containing the SMTP credentials, this must have the keys `user` and `password`. | `""` |
 
-## Sidecar for dashboards
+## Init container for datasources
 
-If the parameter `sidecar.dashboards.enabled` is set, a sidecar container is deployed in the grafana pod. This container watches all config maps in the cluster and filters out the ones with a label as defined in `sidecar.dashboards.label`. The files defined in those configmaps are written to a folder and accessed by grafana. Changes to the configmaps are monitored and the imported dashboards are deleted/updated. A recommendation is to use one configmap per dashboard, as an reduction of multiple dashboards inside one configmap is currently not properly mirrored in grafana.
-Example dashboard config:
-```
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: sample-grafana-dashboard
-  labels:
-     grafana_dashboard: 1
-data:
-  k8s-dashboard.json: |-
-  [...]
-```
-
-## Sidecar for datasources
-
-If the parameter `sidecar.datasource.enabled` is set, a sidecar container is deployed in the grafana pod. This container watches all config maps in the cluster and filters out the ones with a label as defined in `sidecar.datasources.label`. The files defined in those configmaps are written to a folder and accessed by grafana on startup. Using these yaml files, the data sources in grafana can be modified.
+If the parameter `initContainer.datasources.enabled` is set, an init container is deployed before the grafana pod. This container downloads all config maps in the cluster and filters out the ones with a label as defined in `initContainer.datasources.label`. The files defined in those configmaps are written to a folder and accessed by grafana on startup. Using these yaml files, the data sources in grafana can be modified.
 
 Example datasource config adapted from [Grafana](http://docs.grafana.org/administration/provisioning/#example-datasource-config-file):
 ```
@@ -159,4 +143,20 @@ data:
 		  # <bool> allow users to edit datasources from the UI.
 		  editable: false
 
+```
+
+## Sidecar for dashboards
+
+If the parameter `sidecar.dashboards.enabled` is set, a sidecar container is deployed in the grafana pod. This container watches all config maps in the cluster and filters out the ones with a label as defined in `sidecar.dashboards.label`. The files defined in those configmaps are written to a folder and accessed by grafana. Changes to the configmaps are monitored and the imported dashboards are deleted/updated. A recommendation is to use one configmap per dashboard, as an reduction of multiple dashboards inside one configmap is currently not properly mirrored in grafana.
+Example dashboard config:
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sample-grafana-dashboard
+  labels:
+     grafana_dashboard: 1
+data:
+  k8s-dashboard.json: |-
+  [...]
 ```
