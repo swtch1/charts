@@ -251,6 +251,16 @@ smtp:
   # for Grafana in keys `user` and `password`.
   existingSecret: ""
 
+# Init containers run before the pod is built and provide resources in shared volumes which the pod can access.
+initContainer:
+  imagePullPolicy: IfNotPresent
+  datasources:
+    enabled: false
+    # which image will pull datasources from configmaps?
+    configmap_image: swtch1/init-pull-configmaps
+    # label that the configmaps with datasources are marked with
+    label: grafana_datasource
+
 ## Sidecars that collect the configmaps with specified label and stores the included files them into the respective folders
 ## Requires at least Grafana 5 to work and can't be used together with parameters dashboardProviders, datasources and dashboards
 sidecar:
@@ -269,7 +279,3 @@ sidecar:
     label: grafana_dashboard
     # folder in the pod that should hold the collected dashboards
     folder: /tmp/dashboards
-  datasources:
-    enabled: false
-    # label that the configmaps with datasources are marked with
-    label: grafana_datasource

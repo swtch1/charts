@@ -21,7 +21,7 @@ spec:
     type: {{ .Values.deploymentStrategy }}
   {{- if ne .Values.deploymentStrategy "RollingUpdate" }}
     rollingUpdate: null
-  {{- end }}    
+  {{- end }}
   template:
     metadata:
       labels:
@@ -40,8 +40,10 @@ spec:
       securityContext:
 {{ toYaml .Values.securityContext | indent 8 }}
 {{- end }}
-{{- if .Values.dashboards }}
+{{- if or .Values.dashboards .Values.initContainer.datasources.enabled }}
       initContainers:
+{{- end }}
+{{- if .Values.dashboards }}
         - name: download-dashboards
           image: "{{ .Values.downloadDashboardsImage.repository }}:{{ .Values.downloadDashboardsImage.tag }}"
           imagePullPolicy: {{ .Values.downloadDashboardsImage.pullPolicy }}
@@ -58,6 +60,19 @@ spec:
               mountPath: {{ .mountPath }}
               readOnly: {{ .readOnly }}
           {{- end }}
+{{- end }}
+{{- if .Values.initContainer.datasources.enabled }}
+        - name: {{ template "grafana.name" . }}-init-datasources
+          image: "{{ .Values.initContainer.datasources.configmap_image }}"
+          imagePullPolicy: {{ .Values.initContainer.imagePullPolicy }}
+          env:
+            - name: LABEL
+              value: "{{ .Values.initContainer.datasources.label }}"
+            - name: FOLDER
+              value: "/etc/grafana/provisioning/datasources"
+          volumeMounts:
+            - name: datasources-volume
+              mountPath: "/etc/grafana/provisioning/datasources"
 {{- end }}
       {{- if .Values.image.pullSecrets }}
       imagePullSecrets:
@@ -80,21 +95,6 @@ spec:
           volumeMounts:
             - name: sc-dashboard-volume
               mountPath: {{ .Values.sidecar.dashboards.folder | quote }}
-{{- end}}
-{{- if .Values.sidecar.datasources.enabled }}
-        - name: {{ template "grafana.name" . }}-sc-datasources
-          image: "{{ .Values.sidecar.image }}"
-          imagePullPolicy: {{ .Values.sidecar.imagePullPolicy }}
-          env:
-            - name: LABEL
-              value: "{{ .Values.sidecar.datasources.label }}"
-            - name: FOLDER
-              value: "/etc/grafana/provisioning/datasources"
-          resources:
-{{ toYaml .Values.sidecar.resources | indent 12 }}
-          volumeMounts:
-            - name: sc-datasources-volume
-              mountPath: "/etc/grafana/provisioning/datasources"
 {{- end}}
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -140,8 +140,8 @@ spec:
               mountPath: "/etc/grafana/provisioning/dashboards/sc-dashboardproviders.yaml"
               subPath: provider.yaml
 {{- end}}
-{{- if .Values.sidecar.datasources.enabled }}
-            - name: sc-datasources-volume
+{{- if .Values.initContainer.datasources.enabled }}
+            - name: datasources-volume
               mountPath: "/etc/grafana/provisioning/datasources"
 {{- end}}
             - name: storage
@@ -258,8 +258,8 @@ spec:
           configMap:
             name: {{ template "grafana.fullname" . }}-config-dashboards
       {{- end }}
-      {{- if .Values.sidecar.datasources.enabled }}
-        - name: sc-datasources-volume
+      {{- if .Values.initContainer.datasources.enabled }}
+        - name: datasources-volume
           emptyDir: {}
       {{- end -}}
       {{- range .Values.extraSecretMounts }}
