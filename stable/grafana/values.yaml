@@ -24,7 +24,7 @@ livenessProbe:
 
 image:
   repository: grafana/grafana
-  tag: 5.3.1
+  tag: 5.3.2
   pullPolicy: IfNotPresent
 
   ## Optionally specify an array of imagePullSecrets.
@@ -254,10 +254,17 @@ smtp:
 # Init containers run before the pod is built and provide resources in shared volumes which the pod can access.
 initContainer:
   imagePullPolicy: IfNotPresent
+  resources:
+#   limits:
+#     cpu: 100m
+#     memory: 100Mi
+#   requests:
+#     cpu: 50m
+#     memory: 50Mi
   datasources:
     enabled: false
     # which image will pull datasources from configmaps?
-    configmap_image: swtch1/init-pull-configmaps
+    configmap_image: swtch1/init-pull-configmaps:v0.0.1
     # label that the configmaps with datasources are marked with
     label: grafana_datasource
 

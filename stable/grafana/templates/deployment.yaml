@@ -70,6 +70,8 @@ spec:
               value: "{{ .Values.initContainer.datasources.label }}"
             - name: FOLDER
               value: "/etc/grafana/provisioning/datasources"
+          resources:
+{{ toYaml .Values.sidecar.resources | indent 12 }}
           volumeMounts:
             - name: datasources-volume
               mountPath: "/etc/grafana/provisioning/datasources"
@@ -106,6 +108,9 @@ spec:
             - name: ldap
               mountPath: "/etc/grafana/ldap.toml"
               subPath: ldap.toml
+            - name: storage
+              mountPath: "/var/lib/grafana"
+              subPath: {{ .Values.persistence.subPath }}
 {{- if .Values.dashboards }}
   {{- range $provider, $dashboards := .Values.dashboards }}
     {{- range $key, $value := $dashboards }}
@@ -144,9 +149,6 @@ spec:
             - name: datasources-volume
               mountPath: "/etc/grafana/provisioning/datasources"
 {{- end}}
-            - name: storage
-              mountPath: "/var/lib/grafana"
-              subPath: {{ .Values.persistence.subPath }}
           {{- range .Values.extraSecretMounts }}
             - name: {{ .name }}
               mountPath: {{ .mountPath }}
