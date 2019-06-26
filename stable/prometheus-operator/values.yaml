@@ -1344,7 +1344,7 @@ prometheus:
     #   memory: 400Mi
 
     ## Prometheus StorageSpec for persistent data
-    ## ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/user-guides/storage.md
+    ## ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#storagespec
     ##
     storageSpec: {}
     #  volumeClaimTemplate:
